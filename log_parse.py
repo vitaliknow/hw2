@@ -19,7 +19,6 @@ def parse(
 	f = open('log.log', 'r')
 	d1 = defaultdict(int)
 	d2 = defaultdict(int)
-	d_lists = defaultdict(list)
 	
 	to_return = []
 	
@@ -50,15 +49,11 @@ def parse(
 							
 							if slow_queries:
 								req_time = int(re.search('\d+$', line).group(0))
-								d2[url] += req_time
-															
+								d2[url] += req_time						
 	if slow_queries:
-		c = list(d1.items()) + list(d2.items())
-		for u, t in c:
-			d_lists[u].append(t)
-		for ur in d_lists:
-			d1[ur] = d_lists[ur][1]//d_lists[ur][0]
-	
+		for u in d1:
+			d1[u] = int(d2[u])//int(d1[u])
+		
 	for i in Counter(d1).most_common(5):
 		to_return.append(i[1])
 	
