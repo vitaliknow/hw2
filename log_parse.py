@@ -44,7 +44,7 @@ def parse(
 					if not(url in ignore_urls):															  #ignore_urls
 
 							if ignore_www:																  #ignore_www
-								url = re.sub('w{3}.', '', url)
+								url = re.sub('w{3}\.', '', url)
 
 							d1[url] +=1
 							
