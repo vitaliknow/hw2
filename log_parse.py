@@ -2,7 +2,7 @@ import sys
 import re
 import time
 from urllib.parse import urlparse
-from collections import Counter
+from collections import Counter, defaultdict
 
 def to_time(str_time):
 	return time.strptime(str_time, '%d/%b/%Y %H:%M:%S')
@@ -17,15 +17,18 @@ def parse(
 	slow_queries=False
 ):
 	f = open('log.log', 'r')
-	dict = {}
+	d1 = defaultdict(int)
+	d2 = defaultdict(int)
+	d_lists = defaultdict(list)
+	
 	to_return = []
 	
 	for line in f:        # *
 		date_str = re.match('\[\d+/.*\]', line)
-		if date_str is not None:
+		if date_str:
 		
 			date = to_time(date_str.group(0).strip('[]'))
-			if (((start_at is not None) and date < to_time(start_at)) or ((stop_at is not None) and date > to_time(stop_at))):
+			if ((start_at and date < to_time(start_at)) or (stop_at and date > to_time(stop_at))):
 				continue   # to*
 			
 			request = (re.search('\".*?\"', line).group(0)).strip('"').split()
@@ -42,31 +45,25 @@ def parse(
 
 							if ignore_www:																  #ignore_www
 								url = re.sub('w{3}.', '', url)
-								
+
+							d1[url] +=1
+							
 							if slow_queries:
 								req_time = int(re.search('\d+$', line).group(0))
-								
-							if dict.get(url) is None:
-								if slow_queries:
-									dict[url] = [1, req_time]
-								else:
-									dict[url] = 1
-							else:
-								if slow_queries:															
-									dict[url][0] +=	1
-									dict[url][1] += req_time
-								else:
-									dict[url] += 1
+								d2[url] += req_time
+															
 	if slow_queries:
-		for u in dict:
-			dict[u] = dict[u][1]//dict[u][0]
+		c = list(d1.items()) + list(d2.items())
+		for u, t in c:
+			d_lists[u].append(t)
+		for ur in d_lists:
+			d1[ur] = d_lists[ur][1]//d_lists[ur][0]
 	
-	for i in Counter(dict).most_common(5):
+	for i in Counter(d1).most_common(5):
 		to_return.append(i[1])
 	
 	f.close()
 	return to_return
-
 
 
 def main():
